@@ -18,7 +18,6 @@ mongoose.connect(mongodbUrl);
 // mongoose.connect(process.env.MONGOLAB_URI);  // for heroku
 // mongo ds035167.mongolab.com:35167/heroku_app35998051 -u heroku_app35998051 -p nvjupt69fjpud7br66se29r23f
 
-
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function (callback) {
@@ -33,25 +32,22 @@ db.once('open', function (callback) {
   });
   var Lab2Collection = mongoose.model('Lab2Collection', Lab2Schema);
 
-  app.get('/', function(req, res) {
-    res.send('Use /feed.html to feed random data, and /monitor.html to observe it');
+  io.on('connection', function(socket) {  // connection for monitor.js only
+    console.log('A monitor connected');
+    var historyStream = Lab2Collection.find().sort({_id : -1}).limit(10).stream();
+    historyStream.on('data', function(pkt) {
+      socket.emit('historyPkt', pkt);  
+    })
+    setInterval(function() {
+      socket.emit('date', {'date': new Date()});
+    }, 40);  
+    socket.on('disconnect', function() {
+      console.log('monitor disconnected');
+    });
   });
 
-  app.get('/monitor.html', function(req, res, next) {
-    io.on('connection', function(socket) {
-      console.log('A monitor connected');
-      var historyStream = Lab2Collection.find().sort({_id : -1}).limit(10).stream();
-      historyStream.on('data', function(pkt) {
-        socket.emit('historyPkt', pkt);  
-      })
-      setInterval(function() {
-        socket.emit('date', {'date': new Date()});
-      }, 40);  
-      socket.on('disconnect', function() {
-        console.log('monitor disconnected');
-      });
-    });
-    next();
+  app.get('/', function(req, res) {
+    res.send('Use /feed.html to feed random data, and /monitor.html to observe it');
   });
 
   app.post('/feed', function(req, res) {
