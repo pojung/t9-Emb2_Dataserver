@@ -57,12 +57,12 @@ db.once('open', function (callback) {
     req.on('end', function (data) {
       // console.log('Send event:newData to all clients');
       var pkt = JSON.parse(post_request_body)
+      io.sockets.emit('newPkt', pkt); 
       var lab2doc = new Lab2Collection(pkt);
       lab2doc.save(function(err, lab2doc) {
         if (err)  return console.error(err);
         console.log("SAVE a document");
-      });
-      io.sockets.emit('newPkt', pkt);  
+      }); 
     });
     res.send('Server GOT your data!');
   });
