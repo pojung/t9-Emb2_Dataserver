@@ -2,16 +2,22 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+
 var port = process.env.PORT || 5000;
 server.listen(port, function() {
   console.log("Express server listening on port %d", server.address().port);
 });
 
+// io.set('transports', [ 'jsonp-polling' ]);
+
 var mongoose = require( 'mongoose' );
-var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI : 'mongodb://localhost/test';
+// var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI : 'mongodb://localhost/test';
+var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI : 'mongodb://heroku_app35998051:nvjupt69fjpud7br66se29r23f@ds035167.mongolab.com:35167/heroku_app35998051';
 mongoose.connect(mongodbUrl);
 // mongoose.connect( 'mongodb://localhost/test' );  // for local test
 // mongoose.connect(process.env.MONGOLAB_URI);  // for heroku
+// mongo ds035167.mongolab.com:35167/heroku_app35998051 -u heroku_app35998051 -p nvjupt69fjpud7br66se29r23f
+
 
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -72,6 +78,5 @@ db.once('open', function (callback) {
 
 
 
-// mongo ds035167.mongolab.com:35167/heroku_app35998051 -u heroku_app35998051 -p nvjupt69fjpud7br66se29r23f
-// mongodb://heroku_app35998051:nvjupt69fjpud7br66se29r23f@ds035167.mongolab.com:35167/heroku_app35998051
+
 

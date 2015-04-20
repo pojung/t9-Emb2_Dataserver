@@ -1,5 +1,9 @@
 var socket = io.connect();
 
+socket.on('connect', function () {
+  console.log('User connected!');
+});
+
 socket.on('date', function(data) {
   $('#date').text(data.date);
 });
