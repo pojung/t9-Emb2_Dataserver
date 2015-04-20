@@ -13,14 +13,14 @@ app.get('/', function(req, res) {
   res.send('Try /socket.html');
 });
 
-app.get('/socket.html', function(req, res, next) {
+app.get('/monitor.html', function(req, res, next) {
   io.on('connection', function(socket) {
-    console.log('A user connected');
+    console.log('A monitor connected');
     setInterval(function() {
       socket.emit('date', {'date': new Date()});
-    }, 1);  
+    }, 40);  
     socket.on('disconnect', function() {
-      console.log('user disconnected');
+      console.log('monitor disconnected');
     });
   });
   next();
@@ -31,7 +31,6 @@ app.post('/feed', function(req, res) {
   var post_request_body = '';
   req.on('data', function (data) {
      post_request_body += data;
-     // console.log("post_request_body += " + post_request_body);
   });
   req.on('end', function (data) {
     // console.log('Send event:newData to all clients');
