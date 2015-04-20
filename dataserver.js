@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+var mongoose = require( 'mongoose' );
 
 var port = process.env.PORT || 5000;
 server.listen(port, function() {
@@ -12,16 +13,21 @@ app.get('/', function(req, res) {
   res.send('Try /socket.html');
 });
 
-app.use(express.static('./'));
+app.use(express.static('public'));
 
 io.on('connection', function(socket) {
   console.log('A user connected');
-  setInterval(function() {
+  (function test1() {
+    setInterval(function() {
     socket.emit('date', {'date': new Date()});
-  }, 1);
-  socket.on('chat', function(data) {
-    console.log(data.date + ", " + data.content);
-  });
+    }, 1);
+    socket.on('chat', function(data) {
+      console.log(data.date + ", " + data.content);
+    });
+  })();
+  
+
+  
   socket.on('disconnect', function() {
     console.log('user disconnected');
   });

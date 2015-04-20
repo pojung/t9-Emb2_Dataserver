@@ -6,15 +6,13 @@
   <body>
     <script>
       var socket = io.connect();
-      var name = "user" + 100 * Math.random();
       socket.on('date', function(data) {
         $('#date').text(data.date);
       });
       setInterval(function() {
-        socket.emit('upload', {
+        socket.emit('chat', {
           'date': new Date(),
-          'content': 'helloworld',
-          'aNum': Math.random()
+          'content': 'helloworld'
         });
       }, 1000 * Math.random());
     </script>
