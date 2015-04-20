@@ -8,8 +8,10 @@ server.listen(port, function() {
 });
 
 var mongoose = require( 'mongoose' );
-// mongoose.connect( 'mongodb://localhost/test' );
-mongoose.connect(process.env.MONGOLAB_URI);
+var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI : 'mongodb://localhost/test';
+mongoose.connect(mongodbUrl);
+// mongoose.connect( 'mongodb://localhost/test' );  // for local test
+// mongoose.connect(process.env.MONGOLAB_URI);  // for heroku
 
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
