@@ -36,7 +36,7 @@ db.once('open', function (callback) {
     })
     setInterval(function() {
       socket.emit('date', {'date': new Date()});
-    }, 40);  
+    }, 2000);
     socket.on('disconnect', function() {
       console.log('monitor disconnected');
     });
@@ -60,9 +60,9 @@ db.once('open', function (callback) {
       lab2doc.save(function(err, lab2doc) {
         if (err)  return console.error(err);
         console.log("SAVE a document");
+        res.send('Server GOT your data!');
       }); 
     });
-    res.send('Server GOT your data!');
   });
 
   app.use(express.static('public'));
