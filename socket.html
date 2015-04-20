@@ -9,6 +9,12 @@
       socket.on('date', function(data) {
         $('#date').text(data.date);
       });
+      setInterval(function() {
+        socket.emit('chat', {
+          'date': new Date(),
+          'content': 'helloworld'
+        });
+      }, 1000 * Math.random());
     </script>
     <div>This is our socket.html file</div>
     <div id="date"></div>

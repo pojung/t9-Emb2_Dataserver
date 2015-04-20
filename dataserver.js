@@ -15,7 +15,18 @@ app.get('/', function(req, res) {
 app.use(express.static('./'));
 
 io.on('connection', function(socket) {
+  console.log('A user connected');
   setInterval(function() {
     socket.emit('date', {'date': new Date()});
   }, 1);
+  socket.on('chat', function(data) {
+    console.log(data.date + ", " + data.content);
+  });
+  socket.on('disconnect', function() {
+    console.log('user disconnected');
+  });
 });
+
+// mongo ds035167.mongolab.com:35167/heroku_app35998051 -u heroku_app35998051 -p nvjupt69fjpud7br66se29r23f
+// mongodb://heroku_app35998051:nvjupt69fjpud7br66se29r23f@ds035167.mongolab.com:35167/heroku_app35998051
+
