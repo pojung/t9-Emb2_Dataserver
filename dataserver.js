@@ -3,21 +3,56 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var port = process.env.PORT || 5000;
-
-server.listen(port, function() {
-  console.log("Express server listening on port %d", server.address().port);
-});
-
-// set up mongoDB database
 var mongoose = require( 'mongoose' );
-var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI : 'mongodb://heroku_app35998051:nvjupt69fjpud7br66se29r23f@ds035167.mongolab.com:35167/heroku_app35998051';
-  // var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI : 'mongodb://localhost/test';  // for using local database
-mongoose.connect(mongodbUrl);
 
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function (callback) {
-  console.log("Database open");
+var monitorHandler = function(dbCol, socket) {
+  var monitorAgent = { 
+    init: function() {
+      console.log('A monitor connected');
+      socket.on('disconnect', function() {console.log('monitor disconnected'); });
+      this.updateClock();
+      this.sendHistoryData();
+    },
+    updateClock: function() {
+      socket.emit('date', {'date': new Date()});
+      setInterval(function() { socket.emit('date', {'date': new Date()});}, 5000);
+    },
+    sendHistoryData: function() {
+      dbCol.count({}, function(err, count) {
+        socket.emit('countDb', count);  
+      });   
+      var historyStream = dbCol.find().sort({_id : -1}).limit(5).stream();
+      historyStream.on('data', function(pkt) {
+        socket.emit('historyPkt', pkt);  
+      })
+    }
+  };
+  monitorAgent.init(); 
+};
+
+var feedHandler = function(dbCol, req, res) {
+  var post_request_body = '';
+  req.on('data', function (data) {
+     post_request_body += data;
+  });
+  req.on('end', function (data) {
+    var pkt;
+    try {
+      pkt = JSON.parse(post_request_body);
+    } catch(e) {
+      console.err(e);
+    }
+    io.sockets.emit('newPkt', pkt);  // Send event:newData to all monitors
+    var lab2doc = new dbCol(pkt);
+    lab2doc.save(function(err, lab2doc) {  // Save to db
+      if (err)  return console.error(err);
+      console.log("SAVE a document");
+      res.send('Server GOT your data!');
+    }); 
+  });
+};
+
+var getLab2Collection = function() {
   var Lab2Schema = mongoose.Schema({
     date: Date,
     noise: Number,
@@ -26,43 +61,30 @@ db.once('open', function (callback) {
     lat: Number,
     lng: Number
   });
-  var Lab2Collection = mongoose.model('Lab2Collection', Lab2Schema);
+  return mongoose.model('Lab2Collection', Lab2Schema);
+}
 
-  io.on('connection', function(socket) {  // connection setup for monitor.js
-    console.log('A monitor connected');
-    var historyStream = Lab2Collection.find().sort({_id : -1}).limit(10).stream();
-    historyStream.on('data', function(pkt) {
-      socket.emit('historyPkt', pkt);  
-    })
-    setInterval(function() {
-      socket.emit('date', {'date': new Date()});
-    }, 2000);
-    socket.on('disconnect', function() {
-      console.log('monitor disconnected');
-    });
-  });
+server.listen(port, function() {
+  console.log("Express server listening on port %d", server.address().port);
+});
+var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI
+    : 'mongodb://heroku_app35998051:nvjupt69fjpud7br66se29r23f@ds035167.mongolab.com:35167/heroku_app35998051';
+// To use local database, change to this:
+// var mongodbUrl = (process.env.MONGOLAB_URI)? process.env.MONGOLAB_URI : 'mongodb://localhost/test';  // for using local database
+mongoose.connect(mongodbUrl);
 
-  app.get('/', function(req, res) {
-    res.send('Use /feed.html to feed random data, and /monitor.html to observe it');
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'Database connection error: '));
+db.once('open', function (callback) {
+  console.log("Database open");
+  var Lab2Collection = getLab2Collection(mongoose);
+
+  io.on('connection', function(socket) {  // connection setup for monitor.html
+    monitorHandler(Lab2Collection, socket);
   });
 
   app.post('/feed', function(req, res) {
-    // console.log('Got data fed!');
-    var post_request_body = '';
-    req.on('data', function (data) {
-       post_request_body += data;
-    });
-    req.on('end', function (data) {
-      // console.log('Send event:newData to all clients');
-      var pkt = JSON.parse(post_request_body)
-      io.sockets.emit('newPkt', pkt); 
-      var lab2doc = new Lab2Collection(pkt);
-      lab2doc.save(function(err, lab2doc) {
-        if (err)  return console.error(err);
-        console.log("SAVE a document");
-        res.send('Server GOT your data!');
-      }); 
-    });
+    feedHandler(Lab2Collection, req, res);
   });
 
   app.use(express.static('public'));
