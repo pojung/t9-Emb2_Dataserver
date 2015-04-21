@@ -2,14 +2,14 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Monitor data</title>
-    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/monitor.js"></script>
   </head>
   <body>
-    <div class="container-fluid">
+    <div data-role="page">
       <p>This is our monitor.html file</p>
       <p>Clock: <span id="date"></span></p>
       <p>Data in db: <span id='countData'>(loading..)</span></p>
